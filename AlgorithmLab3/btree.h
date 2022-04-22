@@ -22,12 +22,15 @@ class Tree
 	};
 
 	// Не пользовательские методы
-	Node* getMinNode(Node* root);									// Поиск эл-а с минимальным ключом
-	Node* getMaxNode(Node* root);									// Поиск эл-а с максимальным ключом
-	void recalculateTreeBalance();									// Пересчёт параметра балансировки дерева
-	void rebalanceTree();											// Балансировка дерева
-	void add(Key key, Data data, Node*& root);						// Добавление элемента без балансировки
-	void deleteNode(Key key, Node*& root);							// Удаление элемента без балансировки
+	Node* getMinNode(Node* node);									// Поиск эл-а с минимальным ключом
+	Node* getMaxNode(Node* node);									// Поиск эл-а с максимальным ключом
+	void calculateTreeBalance();									// Пересчёт параметра балансировки всего дерева
+	int calculateNodeBalance(Node*& node);							// Расчёт балансировки элемента
+	Node* balance(Node* node);										// Балансировка поддерева
+	Node* llRotate(Node* node);
+	Node* rrRotate(Node* node);
+	Node* lrRotate(Node* node);
+	Node* rlRotate(Node* node);
 	void L_t_R(Node*& root, std::queue<Node*>& queue);				// Для прямого хода
 	void L_t_R(Node*& root, std::stack<Node*>& stack);				// Для обратного хода
 
@@ -47,7 +50,7 @@ public:
 	void addB(Key key, Data data, Node*& root);						// Добавление элемента с балансировкой
 	void deleteNodeB(Key key, Node*& root);							// Удаление элемента с балансировкой
 	// Дополнительные методы
-	int getNodeHeight(Node*& root);									// Получение высоты элемента
+	int getNodeHeight(Node*& node);									// Получение высоты элемента
 	void t_Lt_Rt(Node*& root);										// Вывод последовательности ключей по схеме t_Lt_Rt
 	// Отладочные методы
 	bool isContain(Key key, Node*& root);							// Содержит ли дерево значение
@@ -104,26 +107,26 @@ inline Tree<Data, Key>::Node::Node(Key key, Data data, Node* right, Node* left, 
 }
 
 template<typename Data, typename Key>
-inline Tree<Data, Key>::Node* Tree<Data, Key>::getMinNode(Node* root)
+inline Tree<Data, Key>::Node* Tree<Data, Key>::getMinNode(Node* node)
 {
-	while (root)
+	while (node)
 	{
-		if (root->left)
-			root = root->left;
+		if (node->left)
+			node = node->left;
 		else
-			return root;
+			return node;
 	}
 }
 
 template<typename Data, typename Key>
-inline Tree<Data, Key>::Node* Tree<Data, Key>::getMaxNode(Node* root)
+inline Tree<Data, Key>::Node* Tree<Data, Key>::getMaxNode(Node* node)
 {
-	while (root)
+	while (node)
 	{
-		if (root->right)
-			root = root->right;
+		if (node->right)
+			node = node->right;
 		else
-			return root;
+			return node;
 	}
 }
 
@@ -202,22 +205,7 @@ inline void Tree<Data, Key>::edit(Key key, Data newData, Node*& root)
 template<typename Data, typename Key>
 inline void Tree<Data, Key>::addB(Key key, Data data, Node*& root)
 {
-	add(key, data, root);
-	recalculateTreeBalance();
-	rebalanceTree();
-}
-
-template<typename Data, typename Key>
-inline void Tree<Data, Key>::deleteNodeB(Key key, Node*& root)
-{
-	deleteNode(key, root);
-	recalculateTreeBalance();
-	rebalanceTree();
-}
-
-template<typename Data, typename Key>
-inline void Tree<Data, Key>::add(Key key, Data data, Node*& root)
-{
+	// Вставка элемента в дерево
 	Node* current = root;
 	Node* parent = nullptr;
 	Node** connectionPtr = nullptr;
@@ -234,10 +222,11 @@ inline void Tree<Data, Key>::add(Key key, Data data, Node*& root)
 			parent = current;
 			current = current->right;
 		}
+		// Ключ уже есть в дереве
 		else
 			return;
 	}
-	// Больше одного элемента
+	// размер дерева > 0
 	if (parent)
 	{
 		if (key < parent->key)
@@ -245,6 +234,14 @@ inline void Tree<Data, Key>::add(Key key, Data data, Node*& root)
 		else
 			connectionPtr = &parent->right;
 		*connectionPtr = new Node(key, data, nullptr, nullptr, parent);
+		// Возвращение обратно и проверка баланса
+		current = *connectionPtr;
+ 		while (current)
+		{
+			if (abs(calculateNodeBalance(current)) > 1) 
+				current = balance(current);
+			current = current->parent;
+		}
 	}
 	else
 		root = new Node(key, data, nullptr, nullptr, parent);
@@ -252,7 +249,7 @@ inline void Tree<Data, Key>::add(Key key, Data data, Node*& root)
 }
 
 template<typename Data, typename Key>
-inline void Tree<Data, Key>::deleteNode(Key key, Node*& root)
+inline void Tree<Data, Key>::deleteNodeB(Key key, Node*& root)
 {
 	Node* current = root;
 	Node* parent = nullptr;
@@ -275,7 +272,7 @@ inline void Tree<Data, Key>::deleteNode(Key key, Node*& root)
 			return;
 	}
 	// Устанавливаем указатель на связь
-	if (parent) 
+	if (parent)
 	{
 		if (key < parent->key)
 			connectionPtr = &parent->left;
@@ -289,16 +286,25 @@ inline void Tree<Data, Key>::deleteNode(Key key, Node*& root)
 		*connectionPtr = current->right;
 	else if (!current->right)
 		*connectionPtr = current->left;
-	else if (current->left && current->right) 
+	else if (current->left && current->right)
 	{
 		Node* min = getMinNode(current->right);
 		Data tempData = min->data;
 		Key tempKey = min->key;
-		deleteNode(tempKey, root);
+		deleteNodeB(tempKey, root);
 		current->data = tempData;
 		current->key = tempKey;
 		// Размер не увеличиваем
 		size++;
+	}
+	// Возвращение обратно и проверка баланса
+	if (connectionPtr)
+		current = *connectionPtr;
+	while (current)
+	{
+		if (abs(calculateNodeBalance(current)) > 1)
+			current = balance(current);
+		current = current->parent;
 	}
 	size--;
 }
@@ -307,6 +313,7 @@ inline void Tree<Data, Key>::deleteNode(Key key, Node*& root)
 template<typename Data, typename Key>
 inline void Tree<Data, Key>::printTreeH(Node*& root, int indent)
 {
+	calculateTreeBalance();
 	if (!root)
 	{
 		std::cout << "Дерево пустое" << std::endl;
@@ -318,7 +325,7 @@ inline void Tree<Data, Key>::printTreeH(Node*& root, int indent)
 		std::cout << std::setw(indent) << ' ';
 	if (root->right)
 		std::cout << " /\n" << std::setw(indent) << ' ';
-	std::cout << "к:" << root->key << " д:" << root->data << " б:" << root->bal << std::endl;
+	std::cout << root->key << ":" << root->bal << std::endl;
 	if (root->left)
 	{
 		std::cout << std::setw(indent) << ' ' << " \\\n";
@@ -327,7 +334,7 @@ inline void Tree<Data, Key>::printTreeH(Node*& root, int indent)
 }
 
 template<typename Data, typename Key>
-inline void Tree<Data, Key>::recalculateTreeBalance()
+inline void Tree<Data, Key>::calculateTreeBalance()
 {
 	Node* current = nullptr;
 	std::queue<Node*> queue;
@@ -336,7 +343,7 @@ inline void Tree<Data, Key>::recalculateTreeBalance()
 	{
 		current = queue.front();
 		queue.pop();
-		current->bal = getNodeHeight(current->right) - getNodeHeight(current->left);
+		current->bal = calculateNodeBalance(current);
 		if (current->left)
 			queue.push(current->left);
 		if (current->right)
@@ -345,46 +352,99 @@ inline void Tree<Data, Key>::recalculateTreeBalance()
 }
 
 template<typename Data, typename Key>
-inline void Tree<Data, Key>::rebalanceTree()
+inline int Tree<Data, Key>::calculateNodeBalance(Node*& node)
 {
-	Node* current = nullptr;
-	std::queue<Node*> queue;
-	queue.push(root);
-	while (!queue.empty())
-	{
-		current = queue.front();
-		queue.pop();
-		// Балансировка правого поддерева
-		if (current->bal > 1)
-		{
-			Node* min = getMinNode(current->right);
-			Data tempDataMin = min->data;
-			Key tempKeyMin = min->key;
-			deleteNode(tempKeyMin, current);
-			Data tempDataCur = current->data;
-			Key tempKeyCur = current->key;
-			current->data = tempDataMin;
-			current->key = tempKeyMin;
-			add(tempKeyCur, tempDataCur, current->left);
-		}
-		// Балансировка левого поддерева
-		else if (current->bal < -1) 
-		{
-			Node* max = getMaxNode(current->left);
-			Data tempDataMax = max->data;
-			Key tempKeyMax = max->key;
-			deleteNode(tempKeyMax, current);
-			Data tempDataCur = current->data;
-			Key tempKeyCur = current->key;
-			current->data = tempDataMax;
-			current->key = tempKeyMax;
-			add(tempKeyCur, tempDataCur, current->right);
-		}
-		if (current->left)
-			queue.push(current->left);
-		if (current->right)
-			queue.push(current->right);
+	return getNodeHeight(node->right) - getNodeHeight(node->left);
+}
+
+template<typename Data, typename Key>
+inline Tree<Data, Key>::Node* Tree<Data, Key>::balance(Node* node)
+{
+	Node* temp = nullptr;
+	int bal = calculateNodeBalance(node);
+	// Левый потомок несбалансирован
+	if (bal < -1) {
+		// Если левое поддерево потомка больше или равно правому
+		if (getNodeHeight(node->left) >= getNodeHeight(node->right))
+			temp = rrRotate(node);
+		else
+			temp = rlRotate(node);
 	}
+	// Правый потомок несбалансирован
+	else if (bal > 1) {
+		// Если правое поддерево потомка больше или равно левому
+		if (getNodeHeight(node->right) >= getNodeHeight(node->left))
+			temp = llRotate(node);
+		else
+			temp = lrRotate(node);
+	}
+	return temp;
+}
+
+template<typename Data, typename Key>
+inline Tree<Data, Key>::Node* Tree<Data, Key>::llRotate(Node* node)
+{
+	Node* temp = node->right;
+	node->right = temp->left;
+	temp->left = node;
+	// Родители
+	temp->parent = node->parent;
+	if (node->parent)
+	{
+		if (node->key < node->parent->key)
+			node->parent->left = temp;
+		else
+			node->parent->right = temp;
+	}
+	else
+		root = temp;
+	if (node->right)
+		node->right->parent = node;
+	if (temp->left)
+		temp->left->parent = temp;
+	return temp;
+}
+
+template<typename Data, typename Key>
+inline Tree<Data, Key>::Node* Tree<Data, Key>::rrRotate(Node* node)
+{
+	Node* temp = node->left;
+	node->left = temp->right;
+	temp->right = node;
+	// Родители
+	temp->parent = node->parent;
+	if (node->parent)
+	{
+		if (node->key < node->parent->key)
+			node->parent->left = temp;
+		else
+			node->parent->right = temp;
+	}
+	else
+		root = temp;
+	if (node->left)
+		node->left->parent = node;
+	if (node->right)
+		temp->right->parent = temp;
+	return temp;
+}
+
+template<typename Data, typename Key>
+inline Tree<Data, Key>::Node* Tree<Data, Key>::lrRotate(Node* node)
+{
+	Node* temp;
+	temp = node->right;
+	node->right = rrRotate(temp);
+	return llRotate(node);
+}
+
+template<typename Data, typename Key>
+inline Tree<Data, Key>::Node* Tree<Data, Key>::rlRotate(Node* node)
+{
+	Node* temp;
+	temp = node->left;
+	node->left = llRotate(temp);
+	return rrRotate(node);
 }
 
 template<typename Data, typename Key>
@@ -398,15 +458,15 @@ inline void Tree<Data, Key>::t_Lt_Rt(Node*& root)
 }
 
 template<typename Data, typename Key>
-inline int Tree<Data, Key>::getNodeHeight(Node*& root)
+inline int Tree<Data, Key>::getNodeHeight(Node*& node)
 {
 	int h1 = 0, h2 = 0;
-	if (!root)
+	if (!node)
 		return 0;
-	if (root->left)
-		h2 = getNodeHeight(root->left);
-	if (root->right)
-		h1 = getNodeHeight(root->right);
+	if (node->left)
+		h2 = getNodeHeight(node->left);
+	if (node->right)
+		h1 = getNodeHeight(node->right);
 	return (std::max(h1, h2) + 1);
 }
 

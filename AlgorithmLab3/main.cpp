@@ -212,14 +212,17 @@ int main()
 	bool exit = false;
 
 	// Для отладки
-	tree.addB(25, 25, tree.root);
-	tree.addB(13, 13, tree.root);
-	tree.addB(100, 100, tree.root);
-	tree.addB(15, 15, tree.root);
-	tree.addB(2, 2, tree.root);
-	tree.addB(63, 63, tree.root);
-	tree.addB(8, 8, tree.root);
-	tree.addB(42, 42, tree.root);
+	//tree.addB(25, 25, tree.root);
+	//tree.addB(13, 13, tree.root);
+	//tree.addB(100, 100, tree.root);
+	//tree.addB(15, 15, tree.root);
+	//tree.addB(2, 2, tree.root);
+	//tree.addB(63, 63, tree.root);
+	//tree.addB(8, 8, tree.root);
+	//tree.addB(42, 42, tree.root);
+	//tree.deleteNodeB(42, tree.root);
+	//tree.deleteNodeB(63, tree.root);
+	//tree.printTreeH(tree.root);
 
 	std::string firstMenu[] =
 	{
