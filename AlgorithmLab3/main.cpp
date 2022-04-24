@@ -44,10 +44,10 @@ void test_rand(int n)
 	{
 		m[i] = LineRand();
 		tree.resetViewed();
-		tree.addB(m[i], 1, tree.root);
+		tree.addNodeBal(m[i], 1, tree.root);
 	}
 	//вывод размера дерева до теста
-	std::cout << "items count:" << tree.getSize() << std::endl;
+	std::cout << "items count:" << tree.getTreeSize() << std::endl;
 	//обнуление счЄтчиков трудоЄмкости вставки,
 	//удалени€ и поиска
 	double I = 0;
@@ -59,17 +59,17 @@ void test_rand(int n)
 		if (i % 10 == 0) //10% промахов
 		{
 			tree.resetViewed();
-			tree.deleteNodeB(LineRand(), tree.root);
+			tree.delNodeBal(LineRand(), tree.root);
 			D += tree.getViewedNodes();
 
 			tree.resetViewed();
-			tree.addB(m[rand() % n], 1, tree.root);
+			tree.addNodeBal(m[rand() % n], 1, tree.root);
 			I += tree.getViewedNodes();
 
 			try
 			{
 				tree.resetViewed();
-				tree.read(LineRand());
+				tree.readNodeData(LineRand());
 			}
 			catch (...) {}
 			S += tree.getViewedNodes();
@@ -78,19 +78,19 @@ void test_rand(int n)
 		{
 			int ind = rand() % n;
 			tree.resetViewed();
-			tree.deleteNodeB(m[ind], tree.root);
+			tree.delNodeBal(m[ind], tree.root);
 			D += tree.getViewedNodes();
 
 			INT_64 key = LineRand();
 			tree.resetViewed();
-			tree.addB(key, 1, tree.root);
+			tree.addNodeBal(key, 1, tree.root);
 			I += tree.getViewedNodes();
 			m[ind] = key;
 
 			try
 			{
 				tree.resetViewed();
-				tree.read(m[rand() % n]);
+				tree.readNodeData(m[rand() % n]);
 			}
 			catch (...) {}
 			S += tree.getViewedNodes();
@@ -99,7 +99,7 @@ void test_rand(int n)
 	//конец теста
 	//вывод результатов:
 	//вывод размера дерева после теста
-	std::cout << "items count:" << tree.getSize() << std::endl;
+	std::cout << "items count:" << tree.getTreeSize() << std::endl;
 	//теоретической оценки трудоЄмкости операций BST
 	std::cout << "1.39*log2(n)=" << 1.39 * (log((double)n) / log(2.0)) << std::endl;
 	//экспериментальной оценки трудоЄмкости вставки
@@ -125,10 +125,10 @@ void test_ord(int n)
 	{
 		m[i] = i * 10000;
 		tree.resetViewed();
-		tree.addB(m[i], 1, tree.root);
+		tree.addNodeBal(m[i], 1, tree.root);
 	}
 	//вывод размера дерева до теста
-	std::cout << "items count:" << tree.getSize() << std::endl;
+	std::cout << "items count:" << tree.getTreeSize() << std::endl;
 	//обнуление счЄтчиков трудоЄмкости вставки,
 	// удалени€ и поиска
 	double I = 0;
@@ -144,11 +144,11 @@ void test_ord(int n)
 			int k = LineRand() % (10000 * n);
 			k = k + !(k % 2); //случайный нечЄтный ключ
 			tree.resetViewed();
-			tree.deleteNodeB(k, tree.root);
+			tree.delNodeBal(k, tree.root);
 			D += tree.getViewedNodes();
 
 			tree.resetViewed();
-			tree.addB(m[rand() % n], 1, tree.root);
+			tree.addNodeBal(m[rand() % n], 1, tree.root);
 			I += tree.getViewedNodes();
 
 			k = LineRand() % (10000 * n);
@@ -156,7 +156,7 @@ void test_ord(int n)
 			try
 			{
 				tree.resetViewed();
-				tree.read(k);
+				tree.readNodeData(k);
 			}
 			catch (...) {}
 			S += tree.getViewedNodes();
@@ -165,20 +165,20 @@ void test_ord(int n)
 		{
 			int ind = rand() % n;
 			tree.resetViewed();
-			tree.deleteNodeB(m[ind], tree.root);
+			tree.delNodeBal(m[ind], tree.root);
 			D += tree.getViewedNodes();
 
 			int k = LineRand() % (10000 * n);
 			k = k + k % 2; // случайный чЄтный ключ
 			tree.resetViewed();
-			tree.addB(k, 1, tree.root);
+			tree.addNodeBal(k, 1, tree.root);
 			I += tree.getViewedNodes();
 			m[ind] = k;
 
 			try
 			{
 				tree.resetViewed();
-				tree.read(m[rand() % n]);
+				tree.readNodeData(m[rand() % n]);
 			}
 			catch (...) {}
 			S += tree.getViewedNodes();
@@ -186,7 +186,7 @@ void test_ord(int n)
 	}
 	//вывод результатов:
 	// вывод размера дерева после теста
-	std::cout << "items count:" << tree.getSize() << std::endl;
+	std::cout << "items count:" << tree.getTreeSize() << std::endl;
 	//теоретической оценки трудоЄмкости операций BST
 	std::cout << "n/2 =" << n / 2 << std::endl;
 	//экспериментальной оценки трудоЄмкости вставки
@@ -212,16 +212,16 @@ int main()
 	bool exit = false;
 
 	// ƒл€ отладки
-	//tree.addB(25, 25, tree.root);
-	//tree.addB(13, 13, tree.root);
-	//tree.addB(100, 100, tree.root);
-	//tree.addB(15, 15, tree.root);
-	//tree.addB(2, 2, tree.root);
-	//tree.addB(63, 63, tree.root);
-	//tree.addB(8, 8, tree.root);
-	//tree.addB(42, 42, tree.root);
-	//tree.deleteNodeB(42, tree.root);
-	//tree.deleteNodeB(63, tree.root);
+	//tree.addNodeBal(25, 25, tree.root);
+	//tree.addNodeBal(13, 13, tree.root);
+	//tree.addNodeBal(100, 100, tree.root);
+	//tree.addNodeBal(15, 15, tree.root);
+	//tree.addNodeBal(2, 2, tree.root);
+	//tree.addNodeBal(63, 63, tree.root);
+	//tree.addNodeBal(8, 8, tree.root);
+	//tree.addNodeBal(42, 42, tree.root);
+	//tree.delNodeBal(42, tree.root);
+	//tree.delNodeBal(63, tree.root);
 	//tree.printTreeH(tree.root);
 
 	std::string firstMenu[] =
@@ -292,15 +292,15 @@ int main()
 		switch (sw)
 		{
 		case 1:
-			std::cout << tree.getSize();
+			std::cout << tree.getTreeSize();
 			break;
 		case 2:
-			tree.clear(tree.root);
+			tree.clearTree(tree.root);
 			reverseIterator = nullptr;
 			iterator = nullptr;
 			break;
 		case 3:
-			std::cout << tree.isEmpty();
+			std::cout << tree.isTreeEmpty();
 			break;
 		case 4:
 			std::cout << "¬ведите ключ ";
@@ -308,7 +308,7 @@ int main()
 			try
 			{
 				tree.resetViewed();
-				std::cout << tree.read(key) << std::endl;
+				std::cout << tree.readNodeData(key) << std::endl;
 			}
 			catch (std::exception ex)
 			{
@@ -321,7 +321,7 @@ int main()
 			std::cout << "¬ведите новое значение ";
 			std::cin >> value;
 			tree.resetViewed();
-			tree.edit(key, value, tree.root);
+			tree.editNodeData(key, value, tree.root);
 			break;
 		case 6:
 			std::cout << "¬ведите ключ ";
@@ -329,13 +329,13 @@ int main()
 			std::cout << "¬ведите новое значение ";
 			std::cin >> value;
 			tree.resetViewed();
-			tree.addB(key, value, tree.root);
+			tree.addNodeBal(key, value, tree.root);
  			break;
 		case 7:
 			std::cout << "¬ведите ключ ";
 			std::cin >> key;
 			tree.resetViewed();
-			tree.deleteNodeB(key, tree.root);
+			tree.delNodeBal(key, tree.root);
 			break;
 		case 8:
 			tree.printTreeH(tree.root);
