@@ -389,8 +389,6 @@ inline Tree<Data, Key>::Node* Tree<Data, Key>::llRotate(Node* node)
 			temp->parent->left = temp;
 		else if (temp->key > temp->parent->key)
 			temp->parent->right = temp;
-		else
-			std::cout << "WTFll" << std::endl;
 	}
 	else
 		root = temp;
@@ -416,8 +414,6 @@ inline Tree<Data, Key>::Node* Tree<Data, Key>::rrRotate(Node* node)
 			temp->parent->left = temp;
 		else if (temp->key > temp->parent->key)
 			temp->parent->right = temp;
-		else
-			std::cout << "WTFrr" << std::endl;
 	}
 	else
 		root = temp;

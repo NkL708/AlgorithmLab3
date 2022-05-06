@@ -101,7 +101,7 @@ void test_rand(int n)
 	//вывод размера дерева после теста
 	std::cout << "items count:" << tree.getTreeSize() << std::endl;
 	//теоретической оценки трудоёмкости операций BST
-	std::cout << "1.39*log2(n)=" << 1.39 * (log((double)n) / log(2.0)) << std::endl;
+	std::cout << "log2(n)=" << (log((double)n) / log(2.0)) << std::endl;
 	//экспериментальной оценки трудоёмкости вставки
 	std::cout << "Count insert: " << I / (n / 2) << std::endl;
 	//экспериментальной оценки трудоёмкости удаления
@@ -188,7 +188,7 @@ void test_ord(int n)
 	// вывод размера дерева после теста
 	std::cout << "items count:" << tree.getTreeSize() << std::endl;
 	//теоретической оценки трудоёмкости операций BST
-	std::cout << "n/2 =" << n / 2 << std::endl;
+	std::cout << "log2(n)=" << (log((double)n) / log(2.0)) << std::endl;
 	//экспериментальной оценки трудоёмкости вставки
 	std::cout << "Count insert: " << I / (n / 2) << std::endl;
 	//экспериментальной оценки трудоёмкости удаления
