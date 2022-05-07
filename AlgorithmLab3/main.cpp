@@ -220,6 +220,8 @@ int main()
 	//tree.addNodeBal(63, 63, tree.root);
 	//tree.addNodeBal(8, 8, tree.root);
 	//tree.addNodeBal(42, 42, tree.root);
+	
+
 	//tree.delNodeBal(42, tree.root);
 	//tree.delNodeBal(63, tree.root);
 	//tree.printTreeH(tree.root);
