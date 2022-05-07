@@ -14,11 +14,10 @@ class Tree
 		Node* right;
 		Node* left;
 		Node* parent;
-		int consoleW;
 		int bal;
 
-		Node(Key key, Data data = nullptr, Node* right = nullptr,
-			Node* left = nullptr, Node* parent = nullptr, int bal = 0, int consoleW = 0);
+		Node(Key key, Data data = nullptr, int bal = 0, Node* right = nullptr,
+			Node* left = nullptr, Node* parent = nullptr);
 	};
 
 	// Не пользовательские методы
@@ -35,8 +34,6 @@ class Tree
 	Node* rrRotate(Node* node);										// Правый малый поворот
 	Node* lrRotate(Node* node);										// Большой левый поворот
 	Node* rlRotate(Node* node);										// Большой правый поворот
-	// Операции без балансировки
-	void delNode(Key key, Node*& root);								// Удаление элемента с балансировкой
 
 public:
 	Node* root = nullptr;
@@ -51,8 +48,8 @@ public:
 	// Основные методы
 	Data readNodeData(Key key);										// Поиск элемента
 	void editNodeData(Key key, Data newData, Node*& root);			// Изменение элемента
-	void addNodeBal(Key key, Data data, Node*& root);				// Добавление элемента с балансировкой
-	void delNodeBal(Key key, Node*& root);							// Удаление элемента с балансировкой
+	void addNode(Key key, Data data, Node*& root);					// Добавление элемента с балансировкой
+	void deleteNode(Key key, Node*& root, bool isBalanced);			// Удаление элемента с балансировкой
 	// Дополнительные методы
 	int getNodeHeight(Node*& node);									// Получение высоты элемента
 	void t_Lt_Rt(Node*& root);										// Вывод последовательности ключей по схеме t_Lt_Rt
@@ -99,7 +96,7 @@ public:
 };
 
 template<typename Data, typename Key>
-inline Tree<Data, Key>::Node::Node(Key key, Data data, Node* right, Node* left, Node* parent, int bal, int consoleW)
+inline Tree<Data, Key>::Node::Node(Key key, Data data, int bal, Node* right, Node* left, Node* parent)
 {
 	this->key = key;
 	this->data = data;
@@ -107,7 +104,6 @@ inline Tree<Data, Key>::Node::Node(Key key, Data data, Node* right, Node* left, 
 	this->left = left;
 	this->parent = parent;
 	this->bal = bal;
-	this->consoleW = consoleW;
 }
 
 template<typename Data, typename Key>
@@ -143,7 +139,7 @@ inline Tree<Data, Key>::Tree()
 template<typename Data, typename Key>
 inline Tree<Data, Key>::~Tree()
 {
-
+	clearTree(root);
 }
 
 template<typename Data, typename Key>
@@ -161,7 +157,7 @@ inline void Tree<Data, Key>::clearTree(Node*& root)
 		clearTree(root->left);
 	if (root->right)
 		clearTree(root->right);
-	root = nullptr;
+	delete root;
 	size--;
 }
 
@@ -207,15 +203,8 @@ inline void Tree<Data, Key>::editNodeData(Key key, Data newData, Node*& root)
 }
 
 template<typename Data, typename Key>
-inline void Tree<Data, Key>::addNodeBal(Key key, Data data, Node*& root)
+inline void Tree<Data, Key>::addNode(Key key, Data data, Node*& root)
 {
-	// Первый элемент
-	if (!root) 
-	{
-		root = new Node(key, data, nullptr, nullptr, nullptr);
-		size++;
-		return;
-	}
 	Node* current = root, * parent = nullptr;
 	while (current) 
 	{
@@ -228,10 +217,18 @@ inline void Tree<Data, Key>::addNodeBal(Key key, Data data, Node*& root)
 		else
 			current = current->right;
 	}
-	if (key < parent->key) 
-		current = parent->left = new Node(key, data, nullptr, nullptr, parent);
-	else if (key > parent->key)
-		current = parent->right = new Node(key, data, nullptr, nullptr, parent);
+	if (!parent) 
+	{
+		root = new Node(key, data);
+	}
+	else 
+	{
+		if (key < parent->key) 
+			parent->left = new Node(key, data, 0, nullptr, nullptr, parent);
+		else 
+			parent->right = new Node(key, data, 0, nullptr, nullptr, parent);
+	}
+	current = parent;
 	while (current)
 	{
 		if (abs(calculateNodeBalance(current)) > 1)
@@ -242,7 +239,7 @@ inline void Tree<Data, Key>::addNodeBal(Key key, Data data, Node*& root)
 }
 
 template<typename Data, typename Key>
-inline void Tree<Data, Key>::delNodeBal(Key key, Node*& root)
+inline void Tree<Data, Key>::deleteNode(Key key, Node*& root, bool isNeedBalance)
 {
 	Node* current = root, * parent = nullptr;
 	while (current && current->key != key) 
@@ -259,42 +256,44 @@ inline void Tree<Data, Key>::delNodeBal(Key key, Node*& root)
 		return;
 	if (!current->left && !current->right) 
 	{
-		if (parent)
+		delete current;
+		current = parent;
+		if (key < parent->key)
+			parent->left = nullptr;
+		else
+			parent->right = nullptr;
+	}
+	else 
+	{
+		Node* temp = nullptr;
+		if (!current->left)
+			temp = current->right;
+		else if (!current->right)
+			temp = current->left;
+		if ((bool)current->left != (bool)current->right)
 		{
+			delete current;
 			if (key < parent->key)
-				parent->left = nullptr;
+				parent->left = temp;
 			else
-				parent->right = nullptr;
-			current = parent;
+				parent->right = temp;
+			temp->parent = parent;
 		}
 		else
-			root = nullptr;
-	}
-	else if (!current->left) 
-	{
-		*current = *current->right;
-		current->parent = parent;
-	}
-		
-	else if (!current->right) 
-	{
-		*current = *current->left;
-		current->parent = parent;
-	}
-		
-	else if (current->left && current->right)
-	{
-		Node* min = getMinNode(current->right);
-		Data tempData = min->data;
-		Key tempKey = min->key;
-		delNode(tempKey, root);
-		current->data = tempData;
-		current->key = tempKey;
-		current = min->parent;
-		size++;
+		{
+			Node* min = getMinNode(current->right);
+			parent = min->parent;
+			Data tempData = min->data;
+			Key tempKey = min->key;
+			deleteNode(tempKey, root, false);
+			current->data = tempData;
+			current->key = tempKey;
+			size++;
+		}
+		current = parent;
 	}
 	// Возвращение обратно и балансировка
-	while (current)
+	while (current && isNeedBalance)
 	{
 		if (abs(calculateNodeBalance(current)) > 1)
 			current = balance(current);
@@ -307,12 +306,12 @@ inline void Tree<Data, Key>::delNodeBal(Key key, Node*& root)
 template<typename Data, typename Key>
 inline void Tree<Data, Key>::printTreeH(Node*& root, int indent)
 {
-	calculateTreeBalance();
 	if (!root)
 	{
 		std::cout << "Дерево пустое" << std::endl;
 		return;
 	}
+	calculateTreeBalance();
 	if (root->right)
 		printTreeH(root->right, indent + 4);
 	if (indent)
@@ -441,60 +440,6 @@ inline Tree<Data, Key>::Node* Tree<Data, Key>::rlRotate(Node* node)
 	temp = node->left;
 	node->left = llRotate(temp);
 	return rrRotate(node);
-}
-
-template<typename Data, typename Key>
-inline void Tree<Data, Key>::delNode(Key key, Node*& root)
-{
-	Node* current = root, * parent = nullptr;
-	while (current && current->key != key)
-	{
-		viewedNodes++;
-		parent = current;
-		if (key < current->key)
-			current = current->left;
-		else if (key > current->key)
-			current = current->right;
-	}
-	// Элемента нет
-	if (!current)
-		return;
-	if (!current->left && !current->right)
-	{
-		if (parent)
-		{
-			if (key < parent->key)
-				parent->left = nullptr;
-			else
-				parent->right = nullptr;
-			current = parent;
-		}
-		else
-			root = nullptr;
-	}
-	else if (!current->left)
-	{
-		*current = *current->right;
-		current->parent = parent;
-	}
-
-	else if (!current->right)
-	{
-		*current = *current->left;
-		current->parent = parent;
-	}
-
-	else if (current->left && current->right)
-	{
-		Node* min = getMinNode(current->right);
-		Data tempData = min->data;
-		Key tempKey = min->key;
-		delNode(tempKey, root);
-		current->data = tempData;
-		current->key = tempKey;
-		size++;
-	}
-	size--;
 }
 
 template<typename Data, typename Key>

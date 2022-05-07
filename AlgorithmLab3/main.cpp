@@ -44,7 +44,7 @@ void test_rand(int n)
 	{
 		m[i] = LineRand();
 		tree.resetViewed();
-		tree.addNodeBal(m[i], 1, tree.root);
+		tree.addNode(m[i], 1, tree.root);
 	}
 	//вывод размера дерева до теста
 	std::cout << "items count:" << tree.getTreeSize() << std::endl;
@@ -59,11 +59,11 @@ void test_rand(int n)
 		if (i % 10 == 0) //10% промахов
 		{
 			tree.resetViewed();
-			tree.delNodeBal(LineRand(), tree.root);
+			tree.deleteNode(LineRand(), tree.root, true);
 			D += tree.getViewedNodes();
 
 			tree.resetViewed();
-			tree.addNodeBal(m[rand() % n], 1, tree.root);
+			tree.addNode(m[rand() % n], 1, tree.root);
 			I += tree.getViewedNodes();
 
 			try
@@ -78,12 +78,12 @@ void test_rand(int n)
 		{
 			int ind = rand() % n;
 			tree.resetViewed();
-			tree.delNodeBal(m[ind], tree.root);
+			tree.deleteNode(m[ind], tree.root, true);
 			D += tree.getViewedNodes();
 
 			INT_64 key = LineRand();
 			tree.resetViewed();
-			tree.addNodeBal(key, 1, tree.root);
+			tree.addNode(key, 1, tree.root);
 			I += tree.getViewedNodes();
 			m[ind] = key;
 
@@ -125,7 +125,7 @@ void test_ord(int n)
 	{
 		m[i] = i * 10000;
 		tree.resetViewed();
-		tree.addNodeBal(m[i], 1, tree.root);
+		tree.addNode(m[i], 1, tree.root);
 	}
 	//вывод размера дерева до теста
 	std::cout << "items count:" << tree.getTreeSize() << std::endl;
@@ -144,11 +144,11 @@ void test_ord(int n)
 			int k = LineRand() % (10000 * n);
 			k = k + !(k % 2); //случайный нечЄтный ключ
 			tree.resetViewed();
-			tree.delNodeBal(k, tree.root);
+			tree.deleteNode(k, tree.root, true);
 			D += tree.getViewedNodes();
 
 			tree.resetViewed();
-			tree.addNodeBal(m[rand() % n], 1, tree.root);
+			tree.addNode(m[rand() % n], 1, tree.root);
 			I += tree.getViewedNodes();
 
 			k = LineRand() % (10000 * n);
@@ -165,13 +165,13 @@ void test_ord(int n)
 		{
 			int ind = rand() % n;
 			tree.resetViewed();
-			tree.delNodeBal(m[ind], tree.root);
+			tree.deleteNode(m[ind], tree.root, true);
 			D += tree.getViewedNodes();
 
 			int k = LineRand() % (10000 * n);
 			k = k + k % 2; // случайный чЄтный ключ
 			tree.resetViewed();
-			tree.addNodeBal(k, 1, tree.root);
+			tree.addNode(k, 1, tree.root);
 			I += tree.getViewedNodes();
 			m[ind] = k;
 
@@ -212,16 +212,17 @@ int main()
 	bool exit = false;
 
 	// ƒл€ отладки
-	//tree.addNodeBal(25, 25, tree.root);
-	//tree.addNodeBal(13, 13, tree.root);
-	//tree.addNodeBal(100, 100, tree.root);
-	//tree.addNodeBal(15, 15, tree.root);
-	//tree.addNodeBal(2, 2, tree.root);
-	//tree.addNodeBal(63, 63, tree.root);
-	//tree.addNodeBal(8, 8, tree.root);
-	//tree.addNodeBal(42, 42, tree.root);
-	//tree.delNodeBal(42, tree.root);
-	//tree.delNodeBal(63, tree.root);
+	//tree.addNode(25, 25, tree.root);
+	//tree.addNode(13, 13, tree.root);
+	//tree.addNode(100, 100, tree.root);
+	//tree.addNode(15, 15, tree.root);
+	//tree.addNode(2, 2, tree.root);
+	//tree.addNode(63, 63, tree.root);
+	//tree.addNode(8, 8, tree.root);
+	//tree.addNode(42, 42, tree.root);
+	//
+	//tree.deleteNode(42, tree.root, true);
+	//tree.deleteNode(63, tree.root, true);
 	//tree.printTreeH(tree.root);
 
 	std::string firstMenu[] =
@@ -329,13 +330,13 @@ int main()
 			std::cout << "¬ведите новое значение ";
 			std::cin >> value;
 			tree.resetViewed();
-			tree.addNodeBal(key, value, tree.root);
+			tree.addNode(key, value, tree.root);
  			break;
 		case 7:
 			std::cout << "¬ведите ключ ";
 			std::cin >> key;
 			tree.resetViewed();
-			tree.delNodeBal(key, tree.root);
+			tree.deleteNode(key, tree.root, true);
 			break;
 		case 8:
 			tree.printTreeH(tree.root);
